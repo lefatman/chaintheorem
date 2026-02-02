@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "http": {
+    "listen_addr": ":8080"
+  },
+  "ws": {
+    "listen_addr": ":8443",
+    "path": "/ws",
+    "read_limit_bytes": 32768,
+    "write_queue_max_frames": 64,
+    "overworld_delta_coalesce": true,
+    "tls": {
+      "enabled": false,
+      "cert_file": "",
+      "key_file": ""
+    }
+  },
+  "overworld": {
+    "tick_hz": 10,
+    "grid_aoi": {
+      "cell_size_tiles": 16,
+      "radius_cells": 1
+    },
+    "replication": {
+      "no_change_suppression": true,
+      "stable_sort": "entity_id",
+      "max_pending_overworld_deltas_per_client": 2,
+      "on_backpressure": "drop_oldest_overworld_deltas_and_send_snapshot"
+    }
+  },
+  "battle": {
+    "deterministic_lockstep": true,
+    "outcome_timeline_is_only_animation_truth": true,
+    "history_plies_for_redo": 2,
+    "rng": {
+      "prng": "xorshift64star"
+    }
+  },
+  "auth": {
+    "session_token_bytes": 32,
+    "session_ttl_seconds": 86400
+  },
+  "persistence": {
+    "dev_driver": "sqlite",
+    "prod_driver": "postgres"
+  }
+}

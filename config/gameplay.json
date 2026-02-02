@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "canon": {
+    "elements_count": 5,
+    "items_count": 7,
+    "abilities_count": 8,
+    "notes": [
+      "Canon IDs must match protocol contract.",
+      "Capture-only semantics: no HP/damage/heal fields exist anywhere."
+    ]
+  },
+  "piece_types": [
+    { "key": "pawn", "rank": 1 },
+    { "key": "knight", "rank": 2 },
+    { "key": "bishop", "rank": 2 },
+    { "key": "rook", "rank": 3 },
+    { "key": "queen", "rank": 4 },
+    { "key": "king", "rank": 5 }
+  ],
+  "elements": [
+    {
+      "id": 0,
+      "key": "water",
+      "name": "Water",
+      "passives": {
+        "consumable_multiplier": 2,
+        "multiplier_negated_when_opponent_element_id": 4
+      }
+    },
+    {
+      "id": 1,
+      "key": "fire",
+      "name": "Fire",
+      "passives": {
+        "offensive_abilities_resolve_first": true,
+        "offensive_abilities_fizzle_when_opponent_element_id": 0
+      }
+    },
+    {
+      "id": 2,
+      "key": "earth",
+      "name": "Earth",
+      "passives": {
+        "nullify_remote_offensive_capture": true,
+        "nullification_negated_when_opponent_element_id": 1
+      }
+    },
+    {
+      "id": 3,
+      "key": "air_wind",
+      "name": "Air/Wind",
+      "passives": {
+        "negate_defensive_abilities": true,
+        "sliding_pieces_ignore_blockers": true,
+        "passives_negated_when_opponent_element_id": 2
+      }
+    },
+    {
+      "id": 4,
+      "key": "lightning",
+      "name": "Lightning",
+      "passives": {
+        "army_abilities_slottable_in_piece_type_slots": true,
+        "ability_misfire_against_opponent_element_id": 3,
+        "ability_misfire_chance": 0.5
+      }
+    }
+  ],
+  "ability_sets": {
+    "defensive_ability_ids": [1, 2, 3, 4],
+    "offensive_ability_ids": [5, 6, 7, 8],
+    "remote_offensive_capture_ability_ids": [7]
+  },
+  "abilities": [
+    {
+      "id": 1,
+      "key": "block_path",
+      "name": "Block Path",
+      "scope": "piece_type",
+      "category": "defensive",
+      "consumable": false,
+      "rules": {
+        "post_move_choice": "dir4",
+        "persists_until_piece_moves_again": true,
+        "knights_ignored_for_directional_capture_tests": true
+      }
+    },
+    {
+      "id": 2,
+      "key": "stalwart",
+      "name": "Stalwart",
+      "scope": "piece_type",
+      "category": "defensive",
+      "consumable": false,
+      "rules": {
+        "illegal_if_capturer_rank_lt_victim_rank": true
+      }
+    },
+    {
+      "id": 3,
+      "key": "belligerent",
+      "name": "Belligerent",
+      "scope": "piece_type",
+      "category": "defensive",
+      "consumable": false,
+      "rules": {
+        "illegal_if_capturer_rank_gt_victim_rank": true
+      }
+    },
+    {
+      "id": 4,
+      "key": "redo",
+      "name": "Redo",
+      "scope": "piece_type",
+      "category": "defensive",
+      "consumable": true,
+      "charges": {
+        "model": "per_piece",
+        "default_per_piece": 1,
+        "water_multiplier_applies_at_battle_start": true
+      },
+      "rules": {
+        "trigger_on_capture": true,
+        "rewind_plies": 2,
+        "spent_charge_persists_after_rewind": true,
+        "defensive_negation_disables_trigger": true
+      }
+    },
+    {
+      "id": 5,
+      "key": "double_kill",
+      "name": "Double Kill",
+      "scope": "army_wide",
+      "category": "offensive",
+      "consumable": false,
+      "rules": {
+        "trigger_after_successful_primary_capture": true,
+        "remove_one_neighboring_enemy_piece_rank_lte_captured_victim_rank": true,
+        "neighborhood": "8_adjacent",
+        "deterministic_tiebreak": "lowest_rank_then_lowest_piece_id"
+      }
+    },
+    {
+      "id": 6,
+      "key": "quantum_kill",
+      "name": "Quantum Kill",
+      "scope": "army_wide",
+      "category": "offensive",
+      "consumable": false,
+      "rules": {
+        "trigger_after_successful_primary_capture": true,
+        "remove_one_random_enemy_piece_rank_lte_captured_victim_rank": true,
+        "rng": "deterministic_seeded",
+        "timeline_must_disclose_chosen_victim": true
+      }
+    },
+    {
+      "id": 7,
+      "key": "chain_kill",
+      "name": "Chain Kill",
+      "scope": "army_wide",
+      "category": "offensive",
+      "consumable": false,
+      "rules": {
+        "is_primary_action": true,
+        "remote_capture": true,
+        "requires_adjacent_allied_piggyback_piece": true,
+        "capturer_does_not_move": true
+      }
+    },
+    {
+      "id": 8,
+      "key": "necromancer",
+      "name": "Necromancer",
+      "scope": "army_wide",
+      "category": "offensive",
+      "consumable": true,
+      "charges": {
+        "model": "side_pool",
+        "default_side_pool": 1,
+        "water_multiplier_applies_at_battle_start": true
+      },
+      "rules": {
+        "trigger_after_capturing_higher_rank_piece": true,
+        "restore_one_captured_friendly_piece_rank_lt_captured_victim_rank": true,
+        "restore_at_original_capture_square_if_empty": true,
+        "deterministic_choice": "highest_rank_eligible_then_lowest_piece_id"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "key": "multitaskers_schedule",
+      "name": "Multitasker’s Schedule",
+      "slot_cost": 1,
+      "effects": {
+        "allow_army_ability_in_piece_type_slots_for_non_lightning": true
+      }
+    },
+    {
+      "id": 2,
+      "key": "poisoned_dagger",
+      "name": "Poisoned Dagger",
+      "slot_cost": 1,
+      "effects": {
+        "on_your_piece_captured_remove_capturer_if_capturer_rank_lte_victim_rank": true,
+        "king_is_immune_to_item_removal": true
+      }
+    },
+    {
+      "id": 3,
+      "key": "dual_adepts_gloves",
+      "name": "Dual Adept’s Gloves",
+      "slot_cost": 1,
+      "incompatible_item_ids": [4, 5],
+      "effects": {
+        "army_ability_slots_bonus": 1
+      }
+    },
+    {
+      "id": 4,
+      "key": "triple_adepts_gloves",
+      "name": "Triple Adept’s Gloves",
+      "slot_cost": 2,
+      "incompatible_item_ids": [3, 5],
+      "effects": {
+        "army_ability_slots_bonus": 2
+      }
+    },
+    {
+      "id": 5,
+      "key": "headmaster_ring",
+      "name": "Headmaster Ring",
+      "slot_cost": 3,
+      "incompatible_item_ids": [3, 4],
+      "effects": {
+        "army_ability_slots_bonus": 3
+      }
+    },
+    {
+      "id": 6,
+      "key": "pot_of_hunger",
+      "name": "Pot of Hunger",
+      "slot_cost": 1,
+      "effects": {
+        "xp_multiplier_on_win": 2.0
+      }
+    },
+    {
+      "id": 7,
+      "key": "solar_necklace",
+      "name": "Solar Necklace",
+      "slot_cost": 1,
+      "effects": {
+        "top_up_consumable_charge": true,
+        "top_up_amount": 1,
+        "max_top_ups_per_match": 3
+      }
+    }
+  ],
+  "loadout_rules": {
+    "item_slots_total": 4,
+    "base_army_ability_slots": 1,
+    "max_army_ability_slots_total": 4,
+    "piece_type_slots": ["pawn", "knight", "bishop", "rook", "queen", "king"],
+    "army_ability_placement": {
+      "army_slots_always_allow_army_abilities": true,
+      "piece_type_slots_allow_army_abilities_if": {
+        "element_id_is": 4,
+        "or_item_id_is": 1
+      }
+    }
+  }
+}

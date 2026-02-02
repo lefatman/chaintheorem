@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package mvp;
+
+option go_package = "example.com/mvp-repo/internal/proto/gen;gen";
+
+// NOTE: This file implements the Protocol Contract — CONSOLIDATED.
+// Wire format is NOT protobuf-delimited; frames are:
+//   u16 msg_type (LE) + u32 payload_len (LE) + protobuf payload bytes.
+
+// Canon enums (IDs match contract tables)
+
+enum ElementId {
+  WATER = 0;
+  FIRE = 1;
+  EARTH = 2;
+  AIR_WIND = 3;
+  LIGHTNING = 4;
+}
+
+// Proto3 requires an explicit 0 value; contract IDs begin at 1.
+enum ItemId {
+  ITEM_ID_UNSPECIFIED = 0;
+  ITEM_MULTITASKERS_SCHEDULE = 1;
+  ITEM_POISONED_DAGGER = 2;
+  ITEM_DUAL_ADEPTS_GLOVES = 3;
+  ITEM_TRIPLE_ADEPTS_GLOVES = 4;
+  ITEM_HEADMASTER_RING = 5;
+  ITEM_POT_OF_HUNGER = 6;
+  ITEM_SOLAR_NECKLACE = 7;
+}
+
+// Proto3 requires an explicit 0 value; contract IDs begin at 1.
+enum AbilityId {
+  ABILITY_ID_UNSPECIFIED = 0;
+  ABILITY_BLOCK_PATH = 1;
+  ABILITY_STALWART = 2;
+  ABILITY_BELLIGERENT = 3;
+  ABILITY_REDO = 4;
+  ABILITY_DOUBLE_KILL = 5;
+  ABILITY_QUANTUM_KILL = 6;
+  ABILITY_CHAIN_KILL = 7;
+  ABILITY_NECROMANCER = 8;
+}
+
+enum Dir4 {
+  N = 0;
+  E = 1;
+  S = 2;
+  W = 3;
+}
+
+enum BattleActionType {
+  MOVE = 0;
+  CHAIN_KILL = 1;
+}
+
+message Hello {
+  bytes token = 1; // session token from HTTPS login
+}
+
+message Welcome {
+  uint64 player_id = 1;
+  uint32 server_time_s = 2; // coarse; optional
+}
+
+// Keepalive (contract lists msg types, but schema was not explicitly defined there)
+message Ping {}
+message Pong {}
+
+// Error / rejection (contract lists msg type, but schema was not explicitly defined there)
+message Error {
+  uint32 code = 1; // implementation-defined stable codes (later batch may formalize)
+  string text = 2; // human-readable, non-localized
+}
+
+message WorldMoveIntent {
+  // MVP: cardinal movement on tile grid
+  sint32 dx = 1; // -1,0,1
+  sint32 dy = 2; // -1,0,1
+}
+
+message ChatSend { string text = 1; }
+
+message ChatEvent {
+  uint64 from_player_id = 1;
+  string text = 2;
+}
+
+message WorldEntity {
+  uint64 entity_id = 1;
+  sint32 x = 2;
+  sint32 y = 3;
+  uint32 kind = 4; // small enum in code (not canon-locked in proto yet)
+}
+
+message WorldSnapshot {
+  uint32 tick_seq = 1;
+  repeated WorldEntity entities = 2;
+}
+
+message WorldDelta {
+  uint32 tick_seq = 1;
+  repeated WorldEntity upserts = 2; // changed entities
+  repeated uint64 removes = 3;      // entity_ids leaving AOI or despawned
+}
+
+message BattleStart {
+  uint64 battle_id = 1;
+  fixed64 seed = 2;
+  ElementId element_self = 3;
+  ElementId element_opp = 4;
+
+  // loadouts may be sent as IDs only; client is renderer/UI
+  repeated uint32 army_abilities_self = 5; // AbilityId
+  repeated uint32 army_abilities_opp = 6;
+  repeated uint32 items_self = 7; // ItemId (up to 4 entries)
+  repeated uint32 items_opp = 8;
+
+  bytes initial_board = 9; // compact board encodings (implementation-defined)
+}
+
+message SolarTopUp {
+  uint32 ability_id = 1;      // AbilityId (must be consumable)
+  uint64 target_piece_id = 2; // 0 for side-level consumables
+}
+
+message BattleTurnInput {
+  uint64 battle_id = 1;
+  uint32 turn_seq = 2; // ply index (normally increments; may decrement by 2 after EV_REDO_REWIND)
+  BattleActionType action_type = 3;
+
+  // MOVE
+  uint64 move_piece_id = 10;
+  sint32 move_to_x = 11;
+  sint32 move_to_y = 12;
+  uint32 promote_to = 13; // PieceType or 0 (optional) — PieceType IDs are defined in internal/protocol (ledgered).
+
+  // CHAIN_KILL
+  uint64 chain_capturer_id = 20;
+  uint64 chain_piggyback_ally_id = 21;
+  uint64 chain_target_id = 22;
+
+  // post-move defense choice
+  uint32 block_path_dir4 = 30; // Dir4, or 255 if none
+
+  // optional item use
+  SolarTopUp solar_topup = 40; // optional
+}
+
+enum TimelineEventType {
+  EV_MOVE = 0;
+  EV_CAPTURE = 1;
+  EV_EXTRA_CAPTURE = 2;
+  EV_BLOCK_PATH_SET = 3;
+  EV_ABILITY_FIZZLE = 4;
+  EV_REDO_REWIND = 5; // always rewinds 2 plies (defender replays)
+  EV_PIECE_RESTORED = 6;
+  EV_MATCH_STATE = 7;
+}
+
+message TimelineEvent {
+  uint32 event_seq = 1;
+  TimelineEventType type = 2;
+
+  // union payload (flattened for simplicity)
+  uint64 a = 10;
+  uint64 b = 11;
+  sint32 x = 12;
+  sint32 y = 13;
+  uint32 u = 14;
+  uint32 v = 15;
+  string s = 16;
+}
+
+message BattleOutcomeTimeline {
+  uint64 battle_id = 1;
+  uint32 turn_seq = 2;
+  repeated TimelineEvent events = 3;
+  bytes board_snapshot = 4; // optional: full board for resync; required after EV_REDO_REWIND
+}
+
+message BattleEnd {
+  uint64 battle_id = 1;
+  uint64 winner_player_id = 2; // 0 if draw
+  uint32 reason = 3;           // checkmate/stalemate/resign/timeout (codes not canon-locked in proto yet)
+  uint32 xp_awarded = 4;
+}
