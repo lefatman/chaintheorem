@@ -2,6 +2,10 @@
 
 This document is the “gravity” that prevents drift.
 
+## Canon binding
+- `proto/game.proto` and `internal/protocol/*` are canonical for wire IDs and enums.
+- msg_type numeric IDs and enum IDs are binding; never renumber.
+
 ## Wire + simulation invariants
 - **Realtime is WSS binary frames** carrying **Protobuf payloads**.
 - Frame header is **little-endian**:
@@ -14,6 +18,10 @@ This document is the “gravity” that prevents drift.
   - clients send **inputs**
   - server returns **Outcome Timeline** events (only animation truth)
 - **Capture-only semantics**: no HP/damage/heal anywhere.
+
+## Decision bindings
+- **DECISION 0005**: PING and PONG are empty protobuf messages; ERROR is `message Error { uint32 code = 1; string text = 2; }`.
+- **DECISION 0006**: PieceType mapping (internal): 0=UNSPEC, 1=PAWN, 2=KNIGHT, 3=BISHOP, 4=ROOK, 5=QUEEN, 6=KING.
 
 ## Determinism rules
 - Any randomness is deterministic PRNG seeded at battle start.

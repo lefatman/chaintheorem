@@ -1,65 +1,56 @@
+---
+status: done
+owner: internal/ws_gateway
+generated_files:
+  - internal/ws_gateway/config.go
+  - internal/ws_gateway/server.go
+  - internal/ws_gateway/conn.go
+  - internal/ws_gateway/queue.go
+  - internal/ws_gateway/errors.go
+touchpoints:
+  - internal/router/router.go
+  - internal/router/handlers.go
+  - internal/net/frame/frame.go
+  - internal/protocol/msgtypes.go
+  - cmd/server/main.go
+depends_on:
+  - internal_net_frame
+  - internal_protocol
+  - internal_router
+last_updated: 2026-02-02
+---
+
 # internal/ws_gateway
 
-**Purpose:** WSS lifecycle, read/write loops, backpressure policy, session binding handshake.
+**Purpose:** WSS lifecycle, read/write loops, backpressure policy.
 
-## Canon inputs (authoritative)
-- 03_PROTOCOL_CONTRACT — CONSOLIDATED
-- PROJECT KERNEL v0.1 — CONSOLIDATED
+## What exists now (file-by-file)
+- `config.go`
+  - Gateway runtime config (read limits, queue size, timeouts).
+- `server.go`
+  - HTTP handler that upgrades to WebSocket and starts connection loops.
+- `conn.go`
+  - Read loop parses frames and dispatches by msg_type.
+  - Write loop drains a bounded queue with per-frame timeouts.
+  - Ping/Pong handled in-gateway for keepalive.
+- `queue.go`
+  - Bounded ring buffer plus a single droppable slot for coalesced deltas.
+- `errors.go`
+  - Sentinel errors for backpressure and lifecycle failures.
 
-## Constraints
-- Language: Go
-- Must obey [Global Contracts](./00_global_contract.md) and the Canon Ownership Map.
-- No silent changes; any necessary decision is appended to `docs/DECISION_LEDGER.md`.
+## Interfaces / exports
+- `Server` implements `http.Handler` for the WS endpoint.
+- `Config` defines runtime tuning parameters.
 
-## Algorithms and invariants
-- Two-loop design: read loop decodes frames; write loop drains bounded queue.
-- Backpressure policy:
-  - WORLD_DELTA can be dropped/coalesced.
-  - Battle timelines/end must never be dropped (block or disconnect).
-- Session binding via HELLO{token} before accepting game messages.
+## Backpressure policy (implemented)
+- Droppable: `MSG_WORLD_DELTA` (coalesced into a single pending slot when enabled).
+- Non-droppable: all other outbound msg types.
+- If non-droppable frames cannot be queued, the connection is closed with policy violation.
 
-## Interfaces and boundaries
-## Interfaces
-- Upstream: net/http (HTTPS server)
-- Downstream: `internal/net/frame`, `internal/router`
-- Auth binding: calls `auth`/`persist` to validate token and attach player_id
+## Constraints / invariants
+- Read loop only accepts binary messages and validates framing.
+- No protobuf parsing in the gateway; payloads are forwarded raw.
 
-## File-by-file walkthrough (expected / required)
-## Expected files
-- `server.go` — HTTP server integration + WS upgrade + accept loop
-- `conn.go` — per-connection read/write loops + lifecycle
-- `backpressure.go` — queue sizing, drop policies, classification
-- (optional) `metrics.go` — counters/histograms hooks
+## Remaining work
+- None in this module.
 
-## Gotchas / failure modes
-## Gotchas
-- Do not let write queue grow unbounded.
-- Keep battle traffic reliable; prefer disconnect to lying.
-
-## Acceptance criteria
-## Done when
-- Multiple clients can connect, HELLO, WELCOME, and exchange frames.
-- Backpressure behaves as specified under artificial slow-client tests.
-
-### Prompt seed for this subdirectory (for later)
-Use this as the nucleus for a per-subdir generator prompt.
-
-**Required attachments**
-- `docs/CANON_LOCK.md`
-- `docs/DECISION_LEDGER.md`
-- `docs/STATE_HANDOFF.md` (latest)
-- `TREE.txt`
-- Any existing files under this subdir
-- The governing design docs for this subdir (see “Canon inputs” above)
-
-**Scope lock**
-- Only modify/create files under: `internal/ws_gateway/`  
-- Append-only: `docs/DECISION_LEDGER.md`
-
-**Hard rules**
-- No silent changes: if not specified, add a Decision Ledger entry.
-- No truncation: never output partial files; defer files if needed.
-- Output full files only, each prefixed with `// File: path`.
-
-**Task**
-- Implement/extend the subdir exactly as described in this document, and update `docs/STATE_HANDOFF.md`.
