@@ -14,7 +14,7 @@ Last updated: 2026-02-02
 8. internal_persist — **done**
 9. internal_auth — **done**
 10. internal_httpapi — **done**
-11. internal_world — **todo**
+11. internal_world — **in progress**
 12. internal_aoi — **todo**
 13. internal_chat — **todo**
 14. internal_loadout — **todo**

@@ -1,3 +1,17 @@
+---
+owner: internal/world
+status: IN_PROGRESS
+generated_files:
+  - internal/world/types.go
+  - internal/world/store.go
+  - internal/world/intents.go
+  - internal/world/tick.go
+touchpoints:
+  - docs/ARCH_MAP/README.md
+  - docs/STATE_HANDOFF.md
+last_updated: 2026-02-02
+---
+
 # internal/world
 
 **Purpose:** 10 Hz overworld simulation + entity store + movement intents.
@@ -36,6 +50,27 @@
 ## Acceptance criteria
 ## Done when
 - With two clients connected, movement produces correct authoritative positions at 10 Hz.
+
+## Generated/Modified Files
+- `internal/world/types.go`
+- `internal/world/store.go`
+- `internal/world/intents.go`
+- `internal/world/tick.go`
+
+## Interfaces / Contracts
+- `EntitySource` for AOI reads (`AppendEntities`, `EntityByID`).
+- `MoveIntentSink` for router/world input (`SetMoveIntent`).
+- `Store` with deterministic entity storage + ID allocation.
+- `IntentStore` with stable, sorted per-player intents.
+
+## Algorithmic Invariants Implemented
+- Stable monotonic entity IDs; deterministic iteration order.
+- Movement applies last stored intent per player each tick.
+- Intent application avoids per-tick allocations and map lookups in hot loops.
+
+## Remaining Work
+- Wire router/world handler to decode move intents and bind player entities.
+- Integrate AOI reads and delta replication using the store.
 
 ### Prompt seed for this subdirectory (for later)
 Use this as the nucleus for a per-subdir generator prompt.
