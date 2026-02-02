@@ -1,3 +1,20 @@
+---
+owner: internal/httpapi
+status: DONE
+generated_files:
+  - internal/httpapi/server.go
+  - internal/httpapi/auth_handlers.go
+  - internal/httpapi/loadout_handlers.go
+touchpoints:
+  - docs/DECISION_LEDGER.md
+  - docs/ARCH_MAP/README.md
+  - docs/STATE_HANDOFF.md
+depends_on:
+  - internal_auth
+  - internal_persist
+last_updated: 2026-02-02
+---
+
 # internal/httpapi
 
 **Purpose:** HTTPS JSON endpoints for auth + loadout editing + dev hooks.
@@ -19,6 +36,7 @@
 ## Interfaces and boundaries
 ## Interfaces
 - Uses `auth`, `persist`, `loadout`, `battle_mgr` (for dev hooks).
+- Exposes `Server` with `AuthService` + `LoadoutService` dependencies and `/api/*` handlers.
 
 ## File-by-file walkthrough (expected / required)
 ## Expected files
@@ -34,6 +52,29 @@
 ## Acceptance criteria
 ## Done when
 - You can create an account and obtain a session token via HTTPS endpoints.
+
+## Generated/Modified Files
+- `internal/httpapi/server.go`
+- `internal/httpapi/auth_handlers.go`
+- `internal/httpapi/loadout_handlers.go`
+
+## Interfaces / Contracts
+- `Server` with `ListenAndServe`, `Shutdown`, and `Handler`.
+- `AuthService` (register/login/reset/validate) for auth endpoints.
+- `LoadoutService` (get/update) for loadout endpoints.
+- Routes:
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+  - `POST /api/auth/reset`
+  - `GET /api/loadout`
+  - `POST /api/loadout`
+
+## Algorithmic Invariants Implemented
+- JSON payloads are size-limited and validated with unknown-field rejection.
+- Authorization tokens are read from `Authorization: Bearer` headers.
+
+## Remaining Work
+- None.
 
 ### Prompt seed for this subdirectory (for later)
 Use this as the nucleus for a per-subdir generator prompt.
