@@ -12,11 +12,13 @@ This repo is being generated in **canon-locked batches**.
 
 See: `docs/CANON_LOCK.md`.
 
-## What exists in Batch 00
+## What exists in Batch 02
 - Repo skeleton + canon lock + decision ledger
 - `config/gameplay.json` (elements/abilities/items/loadout rules; canon IDs)
 - `config/server.json` (10 Hz + AOI defaults)
-- Protobuf generation scripts (no .proto files yet)
+- `proto/game.proto` (canonical schema; wire IDs are binding)
+- Core server modules: `internal/ws_gateway`, `internal/router`, `internal/app`, `internal/config`
+- See `docs/STATE_HANDOFF.md` for the authoritative batch summary.
 
 ## How to run (placeholders — implemented in later batches)
 ### Server (later)
@@ -33,7 +35,7 @@ See: `docs/CANON_LOCK.md`.
 ```
 
 ## Protobuf generation
-- Put `.proto` files under `proto/` (later batch will add them).
+- `proto/game.proto` is the canonical schema source of truth.
 - Generate Go types into `internal/proto/gen`:
 ```bash
 make proto
