@@ -174,3 +174,20 @@ DECISION 0010: Password hashing uses argon2id
   - Argon2id is the current recommended memory-hard password hash with tunable cost.
 - Impact:
   - `internal/auth/password.go` hashes and verifies passwords using argon2id.
+
+DECISION 0011: HTTP API auth token transport and CORS policy
+- Date: 2026-02-02
+- Status: LOCKED
+- Context: HTTPS JSON endpoints need a concrete token transport and cross-origin behavior.
+- Options:
+  - Cookies + CORS allowlist
+  - Authorization header bearer tokens; no cookies/CORS by default
+- Decision:
+  - Use `Authorization: Bearer <token>` for HTTP API authentication.
+  - Do not set cookies or CORS headers in the HTTP API server by default.
+- Why:
+  - Keeps session tokens explicit and avoids implicit cookie state.
+  - Defaulting to same-origin reduces policy surface until clients are defined.
+- Impact:
+  - `internal/httpapi/*` reads bearer tokens from the Authorization header.
+  - Any future CORS/cookie changes must be ledgered here.
