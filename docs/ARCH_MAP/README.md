@@ -11,7 +11,7 @@ Last updated: 2026-02-02
 5. internal_router — **done**
 6. internal_app — **done**
 7. internal_config — **done**
-8. internal_persist — **todo**
+8. internal_persist — **done**
 9. internal_auth — **todo**
 10. internal_httpapi — **todo**
 11. internal_world — **todo**
