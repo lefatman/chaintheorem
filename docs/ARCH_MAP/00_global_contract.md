@@ -77,12 +77,13 @@ If you must decide something that is not specified by the canon docs, you must:
 
 
 ### Abilities
+Abilities are army-type only. Piece-type slotting is assignment/scoping, not a separate ability class.
 | AbilityId | Ability | Scope | Category | Consumable | Canonical effect |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Block Path | piece-type | defensive | no | After moving, choose a cardinal direction; this piece cannot be captured from that direction until it moves again. |
-| 2 | Stalwart | piece-type | defensive | no | Pieces of this type cannot be captured by a lower-rank capturer. |
-| 3 | Belligerent | piece-type | defensive | no | Pieces of this type cannot be captured by a higher-rank capturer. |
-| 4 | Redo | piece-type | defensive | yes (1 per piece; doubled for Water vs non-Lightning) | When a piece of this type is captured, rewind exactly 2 plies (the capturing ply and the defender ply immediately before it), restoring the full match state to the start of the defender's prior turn. The defender then replays that prior turn with a different move. All effects of those two plies are reversed. Spend 1 Redo charge on the captured piece; the spent charge remains spent after the rewind. |
+| 1 | Block Path | army-wide | defensive | no | After moving, choose a cardinal direction; this piece cannot be captured from that direction until it moves again. |
+| 2 | Stalwart | army-wide | defensive | no | Pieces of this type cannot be captured by a lower-rank capturer. |
+| 3 | Belligerent | army-wide | defensive | no | Pieces of this type cannot be captured by a higher-rank capturer. |
+| 4 | Redo | army-wide | defensive | yes (1 per piece; doubled for Water vs non-Lightning) | When a piece of this type is captured, rewind exactly 2 plies (the capturing ply and the defender ply immediately before it), restoring the full match state to the start of the defender's prior turn. The defender then replays that prior turn with a different move. All effects of those two plies are reversed. Spend 1 Redo charge on the captured piece; the spent charge remains spent after the rewind. |
 | 5 | Double Kill | army-wide | offensive | no | On capture, remove one neighboring enemy piece of equal or lower rank; if none exists, no effect. |
 | 6 | Quantum Kill | army-wide | offensive | no | On capture, remove one random enemy piece of equal or lower rank. |
 | 7 | Chain Kill | army-wide | offensive | no | Active capture: a piece can piggyback on an adjacent allied piece to capture a target as if it were on the ally’s square (remote capture). |
