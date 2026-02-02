@@ -2,17 +2,8 @@
 status: done
 owner: internal/ws_gateway
 generated_files:
-  - internal/ws_gateway/config.go
-  - internal/ws_gateway/server.go
   - internal/ws_gateway/conn.go
-  - internal/ws_gateway/queue.go
-  - internal/ws_gateway/errors.go
-touchpoints:
-  - internal/router/router.go
-  - internal/router/handlers.go
-  - internal/net/frame/frame.go
-  - internal/protocol/msgtypes.go
-  - cmd/server/main.go
+touchpoints: []
 depends_on:
   - internal_net_frame
   - internal_protocol
@@ -31,7 +22,7 @@ last_updated: 2026-02-02
   - HTTP handler that upgrades to WebSocket and starts connection loops.
 - `conn.go`
   - Read loop parses frames and dispatches by msg_type.
-  - Write loop drains a bounded queue with per-frame timeouts.
+  - Write loop drains a bounded queue with per-frame deadlines.
   - Ping/Pong handled in-gateway for keepalive.
 - `queue.go`
   - Bounded ring buffer plus a single droppable slot for coalesced deltas.
@@ -41,6 +32,15 @@ last_updated: 2026-02-02
 ## Interfaces / exports
 - `Server` implements `http.Handler` for the WS endpoint.
 - `Config` defines runtime tuning parameters.
+
+## Generated/Modified Files
+- `internal/ws_gateway/conn.go`
+
+## Interfaces / Contracts
+- `conn.readLoop` and `conn.writeLoop` use websocket deadlines per frame.
+
+## Algorithmic Invariants Implemented
+- Deadlines are set directly on the websocket before each read/write.
 
 ## Backpressure policy (implemented)
 - Droppable: `MSG_WORLD_DELTA` (coalesced into a single pending slot when enabled).
@@ -53,4 +53,3 @@ last_updated: 2026-02-02
 
 ## Remaining work
 - None in this module.
-

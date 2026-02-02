@@ -3,6 +3,7 @@ package ws_gateway
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/coder/websocket"
 
@@ -12,7 +13,7 @@ import (
 )
 
 type conn struct {
-	ws         *websocket.Conn
+	ws         *deadlineConn
 	router     *router.Router
 	cfg        Config
 	queue      *outboundQueue
@@ -23,9 +24,47 @@ type conn struct {
 	playerID   uint64
 }
 
+type deadlineConn struct {
+	conn          *websocket.Conn
+	readDeadline  time.Time
+	writeDeadline time.Time
+}
+
+func (c *deadlineConn) SetReadDeadline(deadline time.Time) error {
+	c.readDeadline = deadline
+	return nil
+}
+
+func (c *deadlineConn) SetWriteDeadline(deadline time.Time) error {
+	c.writeDeadline = deadline
+	return nil
+}
+
+func (c *deadlineConn) Read(ctx context.Context) (websocket.MessageType, []byte, error) {
+	if c.readDeadline.IsZero() {
+		return c.conn.Read(ctx)
+	}
+	readCtx, cancel := context.WithDeadline(ctx, c.readDeadline)
+	defer cancel()
+	return c.conn.Read(readCtx)
+}
+
+func (c *deadlineConn) Write(ctx context.Context, typ websocket.MessageType, data []byte) error {
+	if c.writeDeadline.IsZero() {
+		return c.conn.Write(ctx, typ, data)
+	}
+	writeCtx, cancel := context.WithDeadline(ctx, c.writeDeadline)
+	defer cancel()
+	return c.conn.Write(writeCtx, typ, data)
+}
+
+func (c *deadlineConn) Close(code websocket.StatusCode, reason string) error {
+	return c.conn.Close(code, reason)
+}
+
 func newConn(ws *websocket.Conn, router *router.Router, cfg Config, pool *sync.Pool, remoteAddr string) *conn {
 	return &conn{
-		ws:         ws,
+		ws:         &deadlineConn{conn: ws},
 		router:     router,
 		cfg:        cfg,
 		queue:      newOutboundQueue(cfg.WriteQueueMaxFrames),
@@ -57,9 +96,10 @@ func (c *conn) run(ctx context.Context) error {
 
 func (c *conn) readLoop(ctx context.Context) error {
 	for {
-		readCtx, cancel := context.WithTimeout(ctx, c.cfg.ReadTimeout)
-		msgType, data, err := c.ws.Read(readCtx)
-		cancel()
+		if err := c.ws.SetReadDeadline(time.Now().Add(c.cfg.ReadTimeout)); err != nil {
+			return err
+		}
+		msgType, data, err := c.ws.Read(ctx)
 		if err != nil {
 			return err
 		}
@@ -117,9 +157,10 @@ func (c *conn) writeLoop(ctx context.Context) error {
 				continue
 			}
 		}
-		writeCtx, cancel := context.WithTimeout(ctx, c.cfg.WriteTimeout)
-		err := c.ws.Write(writeCtx, websocket.MessageBinary, frameBytes)
-		cancel()
+		if err := c.ws.SetWriteDeadline(time.Now().Add(c.cfg.WriteTimeout)); err != nil {
+			return err
+		}
+		err := c.ws.Write(ctx, websocket.MessageBinary, frameBytes)
 		c.putBuffer(frameBytes)
 		if err != nil {
 			return err

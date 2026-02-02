@@ -1,6 +1,7 @@
 # Architecture Map (Generation Order + Status)
 
 This directory maps repo-owned modules to concrete files and their current status. It is the single source of truth for generation order and drift control.
+Last updated: 2026-02-02
 
 ## Generation Order (pipeline, by module)
 1. proto — **done**
@@ -41,4 +42,3 @@ This directory maps repo-owned modules to concrete files and their current statu
 - [client](./client.md)
 - [docs](./docs.md)
 - [scripts](./scripts.md)
-
