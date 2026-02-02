@@ -160,3 +160,17 @@ DECISION 0009: Driver registration owned by callers
   - Keeps persist layer stdlib-first and avoids pinning driver choices prematurely.
 - Impact:
   - `internal/persist/db.go` config uses Driver/DSN and does not import drivers.
+
+DECISION 0010: Password hashing uses argon2id
+- Date: 2026-02-02
+- Status: LOCKED
+- Context: Canon allows bcrypt or argon2id for password hashing and requires a decision.
+- Options:
+  - bcrypt
+  - argon2id
+- Decision:
+  - Use argon2id with encoded parameters, salt, and hash for verification.
+- Why:
+  - Argon2id is the current recommended memory-hard password hash with tunable cost.
+- Impact:
+  - `internal/auth/password.go` hashes and verifies passwords using argon2id.
