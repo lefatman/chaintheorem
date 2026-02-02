@@ -116,3 +116,47 @@ DECISION 0006: PieceType numeric IDs (not specified in protocol contract)
 - Impact:
   - Implemented in `internal/protocol/enums.go`.
   - If canon later specifies IDs, amend this decision and update code accordingly.
+
+DECISION 0007: Dialect-specific migrations for SQLite and Postgres
+- Date: 2026-02-02
+- Status: LOCKED
+- Context: Persist requires schema portability across SQLite (dev) and Postgres (prod) with type differences and placeholder syntax.
+- Options:
+  - Single shared migration set using only lowest-common-denominator SQL types
+  - Separate per-dialect migrations with identical logical schema
+- Decision:
+  - Maintain separate embedded migration sets for SQLite and Postgres, keeping schema parity while using dialect-correct types.
+- Why:
+  - SQLite and Postgres differ on identity/bytea types; separate files avoid unsafe compromises while keeping deterministic order.
+- Impact:
+  - `internal/persist/migrate.go` selects migrations by dialect.
+  - `internal/persist/migrations/sqlite/` and `internal/persist/migrations/postgres/` added.
+
+DECISION 0008: Loadout per-piece ability columns
+- Date: 2026-02-02
+- Status: LOCKED
+- Context: Canon schema specifies `ability_*piece` columns without explicit column names.
+- Options:
+  - Store a serialized list of per-piece assignments
+  - Expand to fixed columns per piece type
+- Decision:
+  - Use fixed columns `ability_pawn`, `ability_knight`, `ability_bishop`, `ability_rook`, `ability_queen`, `ability_king`.
+- Why:
+  - Matches canonical piece types and keeps storage deterministic and query-friendly.
+- Impact:
+  - Implemented in `internal/persist/migrations/*/001_init.sql`.
+  - Used by `internal/persist/loadouts_repo.go`.
+
+DECISION 0009: Driver registration owned by callers
+- Date: 2026-02-02
+- Status: LOCKED
+- Context: Persist package must support SQLite/Postgres but canon does not mandate driver choice.
+- Options:
+  - Persist package imports concrete drivers
+  - Persist package accepts driver name and expects caller registration
+- Decision:
+  - Persist package uses `database/sql` and requires callers to register driver imports.
+- Why:
+  - Keeps persist layer stdlib-first and avoids pinning driver choices prematurely.
+- Impact:
+  - `internal/persist/db.go` config uses Driver/DSN and does not import drivers.
