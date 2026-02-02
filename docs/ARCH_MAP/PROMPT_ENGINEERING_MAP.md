@@ -14,11 +14,6 @@ Every per-subdir prompt should:
 - The governing canon docs for the subdir
 - Any existing files under the subdir prefix you will modify
 
-## “Stop if missing” guard
-Your prompt must include:
-- If a needed file is not attached, STOP and output only:
-  MISSING INPUTS:
-  - <path>
 
 ## Suggested batch slicing (server)
 - proto + framing (already done)
