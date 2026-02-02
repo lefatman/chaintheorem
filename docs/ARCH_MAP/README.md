@@ -12,7 +12,7 @@ Last updated: 2026-02-02
 6. internal_app — **done**
 7. internal_config — **done**
 8. internal_persist — **done**
-9. internal_auth — **todo**
+9. internal_auth — **done**
 10. internal_httpapi — **todo**
 11. internal_world — **todo**
 12. internal_aoi — **todo**

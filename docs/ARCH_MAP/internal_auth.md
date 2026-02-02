@@ -1,3 +1,19 @@
+---
+owner: internal/auth
+status: DONE
+generated_files:
+  - internal/auth/service.go
+  - internal/auth/password.go
+  - internal/auth/tokens.go
+touchpoints:
+  - docs/DECISION_LEDGER.md
+  - docs/ARCH_MAP/README.md
+  - docs/STATE_HANDOFF.md
+  - go.mod
+  - go.sum
+last_updated: 2026-02-02
+---
+
 # internal/auth
 
 **Purpose:** Register/login/reset + session tokens, password hashing.
@@ -37,6 +53,24 @@
 ## Acceptance criteria
 ## Done when
 - Register/login works end-to-end; HELLO binds a WSS connection using issued token.
+
+## Generated/Modified Files
+- `internal/auth/service.go`
+- `internal/auth/password.go`
+- `internal/auth/tokens.go`
+
+## Interfaces / Contracts
+- `Service` with register/login/token validation for `internal/httpapi`.
+- Uses `internal/persist.AccountsRepo` and `internal/persist.SessionsRepo`.
+- Password hashing uses argon2id encoded hash strings.
+
+## Algorithmic Invariants Implemented
+- Opaque session tokens are random bytes encoded for transport and stored with expiry.
+- Token validation performs constant-time comparisons when possible.
+- Password verification uses constant-time hash comparison.
+
+## Remaining Work
+- None.
 
 ### Prompt seed for this subdirectory (for later)
 Use this as the nucleus for a per-subdir generator prompt.
