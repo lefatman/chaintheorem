@@ -77,7 +77,7 @@ If you must decide something that is not specified by the canon docs, you must:
 
 
 ### Abilities
-Abilities are army-type only. Piece-type slotting is assignment/scoping, not a separate ability class.
+Abilities are army-wide by default. Piece-type slotting is assignment/scoping, not a separate ability class; it is permitted only for Lightning armies or when the player equips Multitasker’s Schedule.
 | AbilityId | Ability | Scope | Category | Consumable | Canonical effect |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Block Path | army-wide | defensive | no | After moving, choose a cardinal direction; this piece cannot be captured from that direction until it moves again. |
